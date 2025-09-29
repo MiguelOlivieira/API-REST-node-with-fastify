@@ -1,12 +1,19 @@
 import fastify from 'fastify'
 import { db } from './database.js'
+import crypto from 'node:crypto'
 
 const app = fastify()
 
-app.get('/hello', () => {
-  const test = db('userteste').select('*')
+app.get('/hello', async () => {
+  const transaction = await db('transactions')
+    .insert({
+      id: crypto.randomUUID(),
+      title: 'Transação de teste',
+      amount: 1000,
+    })
+    .returning('*')
 
-  return test
+  return transaction
 })
 app
   .listen({
