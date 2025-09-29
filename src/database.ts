@@ -1,11 +1,7 @@
 import 'dotenv/config' // variavel de ambiente
 import knex from 'knex'
 import type { Knex } from 'knex'
-import { env } from '../env/index.ts'
-
-if (!process.env.DATABASE || !process.env.USER || !process.env.PASSWORD) {
-  throw new Error(' env NOT FOUND!')
-}
+import { env } from './env/index.ts'
 
 export const config: Knex.Config = {
   client: 'pg',
