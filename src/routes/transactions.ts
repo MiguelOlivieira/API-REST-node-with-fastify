@@ -2,35 +2,69 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { db } from '../database.ts'
+import { request } from 'http'
+import { checkSessionIdExists } from '../middlewares/check-session-id-exists.ts'
 
 // rota para inserção transações
 
 export async function transactionsRoutes(app: FastifyInstance) {
-  app.get('/', async () => {
-    const transaction = await db('transactions').select()
+  app.get(
+    '/',
+    {
+      preHandler: [checkSessionIdExists], // Executa function antes do handler
+    },
+    async (request) => {
+      const { sessionId } = request.cookies
 
-    return { transaction } // retornar objeto para futuras adições junto ao transaction
-  })
+      const transaction = await db('transactions')
+        .select()
+        .where('session_id', sessionId)
 
-  app.get('/:id', async (request) => {
-    const getTransactionByIdParamsSchema = z.object({
-      id: z.string().uuid(),
-    })
+      return { transaction } // retornar objeto para futuras adições junto ao transaction
+    },
+  )
 
-    const { id } = getTransactionByIdParamsSchema.parse(request.params)
+  app.get(
+    '/:id',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (request) => {
+      const getTransactionByIdParamsSchema = z.object({
+        id: z.string().uuid(),
+      })
 
-    const transaction = await db('transactions').where('id', id).first()
+      const { id } = getTransactionByIdParamsSchema.parse(request.params)
 
-    return { transaction }
-  })
+      const { sessionId } = request.cookies
 
-  app.get('/summary', async () => {
-    const summary = await db('transactions')
-      .sum('amount', { as: 'amount' })
-      .first()
+      const transaction = await db('transactions')
+        .where({
+          session_id: sessionId,
+          id, // nome da chave = nome do valor
+        })
+        .first()
 
-    return { summary }
-  })
+      return { transaction }
+    },
+  )
+
+  app.get(
+    '/summary',
+    {
+      preHandler: [checkSessionIdExists],
+    },
+    async (request) => {
+      const { sessionId } = request.cookies
+
+      const summary = await db('transactions')
+        .where('session_id', sessionId)
+        .sum('amount', { as: 'amount' })
+        .first()
+
+      return { summary }
+    },
+  )
 
   app.post('/', async (request, reply) => {
     const createTransactionsBodyScrema = z.object({
@@ -44,10 +78,22 @@ export async function transactionsRoutes(app: FastifyInstance) {
       request.body,
     )
 
+    let sessionId = request.cookies.sessionId // verifica se ja existe uma sessionId nos cookies
+
+    if (!sessionId) {
+      sessionId = randomUUID()
+
+      reply.cookie('sessionId', sessionId, {
+        path: '/', // permite qualquer rota pode acessar o cookie
+        maxAge: 60 * 60 * 24 * 7, // 7 days expiration
+      })
+    }
+
     await db('transactions').insert({
       id: randomUUID(),
       title,
       amount: type === 'credit' ? amount : amount * -1, // caso credito, retorna o amount normal, se debito, retorna negativo.
+      session_id: sessionId,
     })
 
     return reply.status(201).send()
