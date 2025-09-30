@@ -5,6 +5,10 @@ import { env } from './env/index.ts'
 
 const app = fastify()
 
+app.addHook('preHandler', async (request) => {
+  console.log(`[${request.method}] ${request.url}`) // pre handler Global
+})
+
 // plugin cookie
 app.register(cookie)
 
