@@ -16,11 +16,11 @@ export async function transactionsRoutes(app: FastifyInstance) {
     async (request) => {
       const { sessionId } = request.cookies
 
-      const transaction = await db('transactions')
+      const transactions = await db('transactions')
         .select()
         .where('session_id', sessionId)
 
-      return { transaction } // retornar objeto para futuras adições junto ao transaction
+      return { transactions } // retornar objeto para futuras adições junto ao transaction
     },
   )
 
