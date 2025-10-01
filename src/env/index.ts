@@ -14,11 +14,14 @@ if (process.env.NODE_ENV === 'test') {
 }
 
 const envSchema = z.object({
-  NODE_ENV: z.enum(['development', 'test', 'production']).default('production'),
-  DATABASE: z.string(),
-  DATABASE_URL: z.string(),
-  USER: z.string(),
-  PASSWORD: z.string(),
+  NODE_ENV: z
+    .enum(['development', 'test', 'production'])
+    .default('development'),
+  DATABASE: z.string().optional(),
+  DATABASE_URL: z.string().optional(),
+  USER: z.string().optional(),
+  PASSWORD: z.string().optional(),
+
   PORT: z.coerce.number().default(3333),
 })
 
