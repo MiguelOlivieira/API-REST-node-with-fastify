@@ -18,7 +18,7 @@ const envSchema = z.object({
     .enum(['development', 'test', 'production'])
     .default('development'),
   DATABASE: z.string().optional(),
-  DATABASE_URL: z.string().optional(),
+  DATABASE_URL: z.string(),
   USER: z.string().optional(),
   PASSWORD: z.string().optional(),
 
