@@ -2,7 +2,6 @@ import type { FastifyInstance } from 'fastify'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 import { db } from '../database.ts'
-import { request } from 'http'
 import { checkSessionIdExists } from '../middlewares/check-session-id-exists.ts'
 
 // rota para inserção transações
